@@ -5,15 +5,11 @@ import edu.wpi.first.wpilibj.Talon;
 
 public class HDrive {
 
-	Talon leftMotor, rightMotor, centerMotor;
-	
+	Talon centerMotor;
 	RobotDrive outsideWheels;
 	
 	public HDrive(int leftPort, int rightPort, int centerPort) {
-		leftMotor = new Talon(leftPort);
-		rightMotor = new Talon(rightPort);
-		outsideWheels = new RobotDrive(leftMotor, rightMotor);
-		
+		outsideWheels = new RobotDrive(leftPort, rightPort);
 		centerMotor = new Talon(centerPort);
 	}
 
