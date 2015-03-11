@@ -1,13 +1,10 @@
 package org.usfirst.frc.team4711.jarvis;
 
 import edu.wpi.first.wpilibj.CameraServer;
-import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotDrive;
-import edu.wpi.first.wpilibj.Talon;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -23,10 +20,7 @@ public class Robot extends IterativeRobot {
 	CameraServer server;
 
 	RobotDrive drive;
-	Talon forkliftMotorA, forkliftMotorB;
-
-	DigitalInput limitSwitchup;
-	DigitalInput limitSwitchdwn;
+	Forklift forklift;
 
 	Timer timer;
 
@@ -45,12 +39,8 @@ public class Robot extends IterativeRobot {
 		drive.setInvertedMotor(RobotDrive.MotorType.kRearRight, true);
 		drive.setMaxOutput(.45);
 
-		forkliftMotorA = new Talon(5);
-		forkliftMotorB = new Talon(6);
-
-		limitSwitchup = new DigitalInput(0);
-		limitSwitchdwn = new DigitalInput(1);
-
+		forklift = new Forklift(5, 6, 0, 1);
+		
 		timer = new Timer();
 
 		server = CameraServer.getInstance();
@@ -74,14 +64,11 @@ public class Robot extends IterativeRobot {
 
 		// forklift (forklift time upped from 2 to 2.5 on 3/8/15)
 		if (time < 2) {
-			forkliftMotorA.set(1);
-			forkliftMotorB.set(-1);
+			forklift.setSpeed(1);
 		} else if (time < 12) {
-			forkliftMotorA.set(0);
-			forkliftMotorB.set(0);
+			forklift.setSpeed(0);
 			// } else {
-			// forkliftMotorA.set(-.5);
-			// forkliftMotorB.set(.5);
+			// forklift.setSpeed(-.5);
 		}
 
 		// drive (time changed from 7 to 6.5 on 3/8/15)
@@ -105,12 +92,6 @@ public class Robot extends IterativeRobot {
 
 		// control the forklift
 
-		boolean up = !limitSwitchup.get();
-		boolean down = !limitSwitchdwn.get();
-
-		SmartDashboard.putBoolean("limit up", up);
-		SmartDashboard.putBoolean("limit down", down);
-
 		// double liftSpeed = xbox.getRawAxis(2) - xbox.getRawAxis(3); // using
 		// triggers
 		double liftSpeed = -xbox.getRawAxis(5); // using right y axis (inverted
@@ -124,28 +105,13 @@ public class Robot extends IterativeRobot {
 			liftSpeed = .75;
 		}
 
-		// don't move if the input is small or if we are trying to go up past
-		// the limit switch
-		if (Math.abs(liftSpeed) < .1) {
-			liftSpeed = 0;
-		} else {
-			// check for top and bottom limits
-			if (up && liftSpeed > 0) {
-				liftSpeed = 0;
-			} else if (down && liftSpeed < 0) {
-				liftSpeed = 0;
-			}
-		}
-
-		forkliftMotorA.set(liftSpeed);
-		forkliftMotorB.set(-liftSpeed);
+		forklift.setSpeed(liftSpeed);
 
 	}
 
 	@Override
 	public void disabledInit() {
-		forkliftMotorA.set(0);
-		forkliftMotorB.set(0);
+		forklift.setSpeed(0);
 	}
 
 }
