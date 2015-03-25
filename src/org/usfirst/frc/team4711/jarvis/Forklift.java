@@ -36,7 +36,7 @@ public class Forklift {
 				liftSpeed = 0;
 			}
 		}
-
+		
 		forkliftMotorA.set(liftSpeed);
 		forkliftMotorB.set(-liftSpeed);
 	}

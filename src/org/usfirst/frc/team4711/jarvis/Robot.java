@@ -1,10 +1,15 @@
 package org.usfirst.frc.team4711.jarvis;
 
+
+import org.usfirst.frc.team4711.jarvis.util.Button;
+
+import edu.wpi.first.wpilibj.AnalogPotentiometer;
 import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -15,6 +20,11 @@ import edu.wpi.first.wpilibj.Timer;
  */
 public class Robot extends IterativeRobot {
 
+	private static final double FIRST_TARGET = 0,
+			TOLERANCE = .05,
+			POSITIONING_SPEED = .5;
+	
+	
 	Joystick xbox;
 
 	CameraServer server;
@@ -23,13 +33,20 @@ public class Robot extends IterativeRobot {
 	Forklift forklift;
 
 	Timer timer;
-
+	
+	AnalogPotentiometer logPoten;
+	Button gotoPositionButton;
+	boolean isPositioning = false;
+	double targetPosition;
+	
 	/**
 	 * This function is run when the robot is first started up and should be
 	 * used for any initialization code.
 	 */
 	public void robotInit() {
 		System.out.println("====> Jarvis <====");
+		   
+		
 		xbox = new Joystick(0);
 
 		drive = new RobotDrive(2, 3, 0, 1);
@@ -43,6 +60,9 @@ public class Robot extends IterativeRobot {
 		
 		timer = new Timer();
 
+		logPoten = new AnalogPotentiometer(0);
+		gotoPositionButton = new Button(xbox, 1);
+		
 		server = CameraServer.getInstance();
 		server.setQuality(50);
 		// the camera name (ex "cam0") can be found through the roborio web
@@ -79,6 +99,12 @@ public class Robot extends IterativeRobot {
 		}
 	}
 
+	@Override
+	public void teleopInit() {
+		gotoPositionButton.reset();
+		isPositioning = false;
+	}
+	
 	/**
 	 * This function is called periodically during operator control
 	 */
@@ -98,13 +124,32 @@ public class Robot extends IterativeRobot {
 												// on controller)
 
 		// Forklift button control (added 3/10/15)
-		if (xbox.getRawButton(4)) {
-			timer.reset();
-			timer.start();
-		} else if (timer.get() > 2) {
-			liftSpeed = .75;
-		}
 
+		// get input from potentiometer
+		double currentPosition = logPoten.get();
+		SmartDashboard.putNumber("pot", currentPosition);
+		
+		// check for input
+		if (gotoPositionButton.getPress()) {
+			targetPosition = FIRST_TARGET;
+			isPositioning = true;
+		}
+		
+		if (isPositioning) {
+			
+			// compare to target angle
+			if (Math.abs(targetPosition - currentPosition) < TOLERANCE) {
+				isPositioning = false;
+			} else {
+				if (targetPosition > currentPosition) {
+					liftSpeed = POSITIONING_SPEED;
+				} else {
+					liftSpeed = -POSITIONING_SPEED;
+				}
+			}
+		}
+		
+		// send output to motors
 		forklift.setSpeed(liftSpeed);
 
 	}
